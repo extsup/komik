@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komik</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --surface: #111;
+  --surface2: #1a1a1a;
+  --border: #222;
+  --accent: #ff3c3c;
+  --accent2: #ff7043;
+  --text: #efefef;
+  --muted: #555;
+  --muted2: #888;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,8,8,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 14px; height: 52px;
+  display: flex; align-items: center; gap: 10px;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 20px;
+  color: var(--accent); letter-spacing: -1px;
+  flex-shrink: 0; cursor: pointer;
+}
+.search-wrap { flex: 1; position: relative; }
+.search-wrap input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 12px 7px 34px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px; pointer-events: none; color: var(--muted);
+}
+.btn-nav {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted2); padding: 7px 12px; border-radius: 8px;
+  font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+}
+.btn-nav:hover { color: var(--text); border-color: var(--muted); }
+
+/* VIEWS */
+.view { display: none; }
+.view.active { display: block; }
+
+/* HOME */
+.home-header {
+  padding: 20px 14px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.home-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 22px;
+  letter-spacing: -0.5px;
+}
+.home-title span { color: var(--accent); }
+.source-pills { display: flex; gap: 6px; }
+.pill {
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 4px; border: 1px solid var(--border);
+  color: var(--muted2); background: var(--surface2);
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.pill.s { border-color: #ff3c3c44; color: #ff3c3c; background: #ff3c3c11; }
+.pill.k { border-color: #ff704344; color: #ff7043; background: #ff704311; }
+.pill.y { border-color: #4fc3f744; color: #4fc3f7; background: #4fc3f711; }
+
+.manga-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px; padding: 0 14px 20px;
+}
+.manga-card {
+  cursor: pointer; border-radius: 8px; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: transform 0.18s, border-color 0.18s;
+  animation: fadeIn 0.3s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.manga-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.manga-cover {
+  width: 100%; aspect-ratio: 2/3;
+  object-fit: cover; background: var(--surface2); display: block;
+}
+.manga-cover-ph {
+  width: 100%; aspect-ratio: 2/3; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 24px;
+}
+.manga-info { padding: 7px 8px 9px; }
+.manga-title {
+  font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.manga-src {
+  font-size: 10px; color: var(--muted); margin-top: 3px;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.manga-src.s { color: #ff3c3c88; }
+.manga-src.k { color: #ff704388; }
+.manga-src.y { color: #4fc3f788; }
+
+.pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 12px 14px 24px;
+}
+.btn-page {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 7px 18px; border-radius: 8px;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; transition: border-color 0.2s;
+}
+.btn-page:hover:not(:disabled) { border-color: var(--accent); }
+.btn-page:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-info { font-size: 12px; color: var(--muted2); min-width: 50px; text-align: center; }
+
+/* LOADING */
+.loading-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 20px; gap: 12px;
+  color: var(--muted2); font-size: 13px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* DETAIL */
+.detail-hero {
+  position: relative; overflow: hidden; padding-bottom: 20px;
+}
+.detail-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  filter: blur(24px) brightness(0.25) saturate(1.5);
+  transform: scale(1.1); z-index: 0;
+}
+.detail-content { position: relative; z-index: 1; padding: 14px; }
+.btn-back {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text); padding: 6px 14px; border-radius: 8px;
+  cursor: pointer; font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 16px; display: inline-block;
+}
+.detail-top { display: flex; gap: 14px; }
+.detail-cover {
+  flex-shrink: 0; width: 110px; border-radius: 8px;
+  overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.detail-cover img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+.detail-meta { flex: 1; min-width: 0; padding-top: 2px; }
+.detail-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 18px; line-height: 1.2;
+  margin-bottom: 8px; color: #fff;
+  letter-spacing: -0.3px;
+}
+.status-pill {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; margin-bottom: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+}
+.status-pill.ongoing { border-color: #4caf5044; color: #81c784; background: #4caf5011; }
+.status-pill.completed { border-color: #ff3c3c44; color: #ff7070; background: #ff3c3c11; }
+.detail-author { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+.genres {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  padding: 12px 14px 0;
+}
+.genre-tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 4px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted2);
+}
+.desc-wrap { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.desc-text {
+  font-size: 13px; color: var(--muted2); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.desc-text.exp { display: block; }
+.btn-desc {
+  font-size: 12px; color: var(--accent); cursor: pointer;
+  margin-top: 6px; background: none; border: none;
+  font-family: 'DM Sans', sans-serif; padding: 0;
+}
+.ch-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 8px;
+}
+.ch-title {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 14px; letter-spacing: -0.3px;
+}
+.ch-count {
+  font-size: 11px; color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 4px;
+}
+.ch-list { padding: 0 14px 40px; }
+.ch-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 10px; border-radius: 6px; cursor: pointer;
+  border: 1px solid transparent; margin-bottom: 2px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ch-item:hover { background: var(--surface2); border-color: var(--border); }
+.ch-item.read { opacity: 0.4; }
+.ch-left { display: flex; align-items: center; gap: 10px; }
+.ch-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.ch-dot.read { background: var(--muted); }
+.ch-name { font-size: 13px; font-weight: 500; }
+.ch-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* READER */
+#reader-view { background: #060606; min-height: 100vh; }
+.reader-pages {
+  max-width: 720px; margin: 0 auto;
+  padding: 0 10%; display: flex;
+  flex-direction: column;
+}
+.reader-pages img { width: 100%; display: block; }
+.reader-top {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(6,6,6,0.97); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 14px; display: flex; align-items: center; gap: 10px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.reader-top.hide { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+.reader-bot {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(6,6,6,0.97); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 9px 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.reader-bot.hide { transform: translateY(100%); opacity: 0; pointer-events: none; }
+.rui-title { flex: 1; font-size: 12px; color: var(--muted2); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rui-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 7px 20px; border-radius: 8px;
+  cursor: pointer; font-size: 13px; min-width: 90px; text-align: center;
+  font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+}
+.rui-btn:hover:not(:disabled) { border-color: var(--accent); }
+.rui-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.rui-ch { font-size: 11px; color: var(--muted); min-width: 70px; text-align: center; }
+.rui-back {
+  background: rgba(255,60,60,0.12); border: 1px solid rgba(255,60,60,0.25);
+  color: var(--accent); padding: 6px 12px; border-radius: 8px;
+  cursor: pointer; font-size: 13px; white-space: nowrap; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* HISTORY */
+.hist-list { padding: 0 14px 40px; }
+.hist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface);
+  margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s;
+}
+.hist-item:hover { border-color: var(--accent); }
+.hist-thumb { width: 44px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: var(--surface2); }
+.hist-info { flex: 1; min-width: 0; }
+.hist-title { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-ch { font-size: 11px; color: var(--accent); margin-top: 3px; }
+.hist-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.btn-clear {
+  display: block; margin: 0 14px 16px;
+  background: transparent; border: 1px solid #f4433644;
+  color: #f44336; padding: 7px 14px; border-radius: 8px;
+  cursor: pointer; font-size: 12px; font-family: 'DM Sans', sans-serif;
+}
+
+.empty-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 60px 20px; gap: 10px; color: var(--muted); font-size: 13px;
+}
+.empty-icon { font-size: 32px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="goHome()">KOMIK</div>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search-input" placeholder="Cari judul..." onkeydown="if(event.key==='Enter')doSearch()">
+  </div>
+  <button class="btn-nav" onclick="showHistory()">📚</button>
+</nav>
+
+<div id="home-view" class="view active">
+  <div class="home-header">
+    <div class="home-title">Terbaru <span id="home-count"></span></div>
+    <div class="source-pills">
+      <span class="pill s">SHN</span>
+      <span class="pill k">KC</span>
+      <span class="pill y">KRY</span>
+    </div>
+  </div>
+  <div id="manga-grid" class="manga-grid"></div>
+  <div class="pagination">
+    <button class="btn-page" id="btn-prev" onclick="changePage(-1)" disabled>← Prev</button>
+    <div class="page-info" id="page-info">Hal 1</div>
+    <button class="btn-page" id="btn-next" onclick="changePage(1)">Next →</button>
+  </div>
+</div>
+
+<div id="detail-view" class="view"></div>
+<div id="reader-view" class="view"></div>
+<div id="history-view" class="view"></div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const API = {
+  shinigami: '/api/shinigami',
+  komikcast: '/api/komikcast',
+  kiryuu:    '/api/kiryuu',
+};
+const WSRV = 'https://images.weserv.nl/?w=220&h=320&fit=cover&output=jpg&q=80&url=';
+const PRIORITY = ['shinigami', 'komikcast', 'kiryuu'];
+const PER_PAGE = 24;
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentPage    = 1;
+let allComics      = [];
+let filteredComics = [];
+let currentManga   = null;
+let currentChapters = [];
+let currentChIdx   = 0;
+let readerVisible  = true;
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  removeReaderUI();
+}
+function goHome() {
+  showView('home-view');
+  renderGrid();
+}
+function normalizeTitle(t) {
+  return t.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+function relDate(s) {
+  if (!s) return '';
+  const d = Math.floor((Date.now() - new Date(s)) / 1000);
+  if (d < 60) return 'Baru saja';
+  if (d < 3600) return `${Math.floor(d/60)} mnt lalu`;
+  if (d < 86400) return `${Math.floor(d/3600)} jam lalu`;
+  if (d < 86400*7) return `${Math.floor(d/86400)} hari lalu`;
+  if (d < 86400*30) return `${Math.floor(d/86400/7)} minggu lalu`;
+  return `${Math.floor(d/86400/30)} bln lalu`;
+}
+
+// ─── FETCH ───────────────────────────────────────────────────────────────────
+async function fetchShinigami(page) {
+  const path = encodeURIComponent(`/v1/manga/list?page=${page}&page_size=${PER_PAGE}&sort=latest`);
+  const r = await fetch(`${API.shinigami}?path=${path}`, { cache: 'no-store' });
+  const j = await r.json();
+  return (j.data || []).map(item => ({
+    source: 'shinigami',
+    id: item.manga_id || item.mangaId,
+    slug: item.manga_id || item.mangaId,
+    title: item.title || '',
+    cover: item.cover_portrait_url || item.cover_image_url || '',
+    status: item.status === 1 ? 'ongoing' : item.status === 2 ? 'completed' : '',
+    updatedAt: item.updated_at || item.updatedAt || '',
+    type: 'shinigami',
+  }));
+}
+
+async function fetchKomikcast(page) {
+  const path = encodeURIComponent(`/series?take=${PER_PAGE}&page=${page}&sort=latest&sortOrder=desc&includeMeta=true`);
+  const r = await fetch(`${API.komikcast}?path=${path}`, { cache: 'no-store' });
+  const j = await r.json();
+  return (j.data || []).map(item => ({
+    source: 'komikcast',
+    id: item.data?.slug,
+    slug: item.data?.slug,
+    title: item.data?.title || '',
+    cover: item.data?.coverImage || '',
+    status: item.data?.status || '',
+    updatedAt: item.updatedAt || '',
+    type: 'komikcast',
+  }));
+}
+
+async function fetchKiryuu(page) {
+  const path = encodeURIComponent(`/wp-json/wp/v2/manga?per_page=${PER_PAGE}&page=${page}&orderby=modified&order=desc&_embed`);
+  const r = await fetch(`${API.kiryuu}?path=${path}`, { cache: 'no-store' });
+  const j = await r.json();
+  return (Array.isArray(j) ? j : []).map(item => {
+    const cls = item.class_list || [];
+    const status = cls.includes('status-ongoing') ? 'ongoing' : cls.includes('status-completed') ? 'completed' : '';
+    const cover = item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
+    return {
+      source: 'kiryuu',
+      id: item.slug,
+      slug: item.slug,
+      title: item.title?.rendered || '',
+      cover,
+      status,
+      updatedAt: item.modified || '',
+      type: 'kiryuu',
+    };
+  });
+}
+
+// ─── DEDUPLICATE ─────────────────────────────────────────────────────────────
+function deduplicate(comics) {
+  const map = new Map();
+  const prioritized = [...comics].sort((a, b) =>
+    PRIORITY.indexOf(a.source) - PRIORITY.indexOf(b.source)
+  );
+  for (const c of prioritized) {
+    const key = normalizeTitle(c.title);
+    if (!map.has(key)) map.set(key, c);
+  }
+  return [...map.values()];
+}
+
+// ─── LOAD HOME ───────────────────────────────────────────────────────────────
+async function loadHome(page = 1) {
+  currentPage = page;
+  const grid = document.getElementById('manga-grid');
+  grid.innerHTML = `<div style="grid-column:1/-1"><div class="loading-wrap"><div class="spinner"></div><div>Memuat dari 3 sumber...</div></div></div>`;
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = true;
+
+  try {
+    const [shn, kc, kry] = await Promise.allSettled([
+      fetchShinigami(page),
+      fetchKomikcast(page),
+      fetchKiryuu(page),
+    ]);
+
+    const all = [
+      ...(shn.status === 'fulfilled' ? shn.value : []),
+      ...(kc.status  === 'fulfilled' ? kc.value  : []),
+      ...(kry.status === 'fulfilled' ? kry.value : []),
+    ];
+
+    allComics = deduplicate(all);
+    filteredComics = allComics;
+    document.getElementById('home-count').textContent = `(${allComics.length})`;
+    renderGrid();
+
+    document.getElementById('btn-prev').disabled = page <= 1;
+    document.getElementById('btn-next').disabled = allComics.length < PER_PAGE;
+    document.getElementById('page-info').textContent = `Hal ${page}`;
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-wrap"><div class="empty-icon">⚠️</div><div>${e.message}</div></div></div>`;
+  }
+}
+
+function renderGrid() {
+  const grid = document.getElementById('manga-grid');
+  if (!filteredComics.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-wrap"><div class="empty-icon">📭</div><div>Tidak ada hasil</div></div></div>`;
+    return;
+  }
+  grid.innerHTML = '';
+  filteredComics.forEach((c, i) => {
+    const cover = c.cover ? WSRV + encodeURIComponent(c.cover) : '';
+    const srcCls = c.source === 'shinigami' ? 's' : c.source === 'komikcast' ? 'k' : 'y';
+    const srcLabel = c.source === 'shinigami' ? 'Shinigami' : c.source === 'komikcast' ? 'Komikcast' : 'Kiryuu';
+    const el = document.createElement('div');
+    el.className = 'manga-card';
+    el.style.animationDelay = `${i * 0.02}s`;
+    el.innerHTML = `
+      ${cover
+        ? `<img class="manga-cover" src="${cover}" loading="lazy" onerror="this.outerHTML='<div class=\\'manga-cover-ph\\'>📖</div>'">`
+        : `<div class="manga-cover-ph">📖</div>`}
+      <div class="manga-info">
+        <div class="manga-title">${c.title}</div>
+        <div class="manga-src ${srcCls}">${srcLabel}</div>
+      </div>`;
+    el.onclick = () => loadDetail(c);
+    grid.appendChild(el);
+  });
+}
+
+function changePage(dir) {
+  loadHome(Math.max(1, currentPage + dir));
+  window.scrollTo(0, 0);
+}
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  showView('home-view');
+  if (!q) { filteredComics = allComics; }
+  else { filteredComics = allComics.filter(c => c.title.toLowerCase().includes(q)); }
+  document.getElementById('home-count').textContent = `(${filteredComics.length})`;
+  renderGrid();
+}
+
+// ─── DETAIL ──────────────────────────────────────────────────────────────────
+async function loadDetail(comic) {
+  currentManga = comic;
+  showView('detail-view');
+  const view = document.getElementById('detail-view');
+  view.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><div>Memuat detail...</div></div>`;
+  window.scrollTo(0, 0);
+
+  try {
+    let title = comic.title;
+    let cover = comic.cover;
+    let status = comic.status;
+    let author = '';
+    let desc = '';
+    let genres = [];
+    let chapters = [];
+
+    if (comic.source === 'shinigami') {
+      const [det, chs] = await Promise.all([
+        fetch(`${API.shinigami}?path=${encodeURIComponent(`/v1/manga/detail/${comic.id}`)}`, { cache: 'no-store' }).then(r => r.json()),
+        fetch(`${API.shinigami}?path=${encodeURIComponent(`/v1/chapter/${comic.id}/list?page_size=3000`)}`, { cache: 'no-store' }).then(r => r.json()),
+      ]);
+      const d = det.data || det;
+      const tax = d.taxonomy || {};
+      cover = d.cover_portrait_url || d.cover_image_url || cover;
+      status = d.status === 1 ? 'ongoing' : d.status === 2 ? 'completed' : '';
+      author = (tax['Author'] || []).map(x => x.name).join(', ');
+      desc = d.description || '';
+      genres = (tax['Genre'] || []).map(x => x.name);
+      chapters = (chs.chapter_list || chs.data || []).map(ch => ({
+        name: `Chapter ${ch.chapter_number || ch.chapterNumber || '?'}`,
+        url: ch.chapter_id || ch.chapterId,
+        date: ch.created_at || ch.createdAt || '',
+        source: 'shinigami',
+        mangaId: comic.id,
+      }));
+
+    } else if (comic.source === 'komikcast') {
+      const [det, chs] = await Promise.all([
+        fetch(`${API.komikcast}?path=${encodeURIComponent(`/series/${comic.slug}`)}`, { cache: 'no-store' }).then(r => r.json()),
+        fetch(`${API.komikcast}?path=${encodeURIComponent(`/series/${comic.slug}/chapters`)}`, { cache: 'no-store' }).then(r => r.json()),
+      ]);
+      const d = det.data?.data || det.data || {};
+      cover = d.coverImage || cover;
+      status = d.status || status;
+      author = d.author || '';
+      desc = d.synopsis || d.description || '';
+      genres = (d.genres || []).map(g => g?.data?.name || g?.name || '').filter(Boolean);
+      const rawChs = chs.data || [];
+      chapters = rawChs.map(ch => ({
+        name: `Chapter ${ch.data?.index ?? ch.chapterIndex ?? '?'}`,
+        url: ch.data?.index ?? ch.chapterIndex,
+        date: ch.createdAt || '',
+        source: 'komikcast',
+        mangaSlug: comic.slug,
+      }));
+
+    } else if (comic.source === 'kiryuu') {
+      const det = await fetch(`${API.kiryuu}?path=${encodeURIComponent(`/wp-json/wp/v2/manga?slug[]=${comic.slug}&_embed`)}`, { cache: 'no-store' }).then(r => r.json());
+      const d = Array.isArray(det) ? det[0] : det;
+      const cls = d.class_list || [];
+      cover = d._embedded?.['wp:featuredmedia']?.[0]?.source_url || cover;
+      status = cls.includes('status-ongoing') ? 'ongoing' : cls.includes('status-completed') ? 'completed' : '';
+      desc = d.content?.rendered?.replace(/<[^>]+>/g, '') || '';
+      genres = cls.filter(c => c.startsWith('genre-')).map(c => c.replace('genre-', '').replace(/-/g, ' '));
+      const chs = await fetch(`${API.kiryuu}?action=chapter_list&manga_id=${d.id}`, { cache: 'no-store' }).then(r => r.json());
+      chapters = (chs.data || []).map(ch => ({
+        name: ch.name,
+        url: ch.url,
+        date: ch.date,
+        source: 'kiryuu',
+      }));
+    }
+
+    currentChapters = chapters;
+    const coverUrl = cover ? WSRV + encodeURIComponent(cover) : '';
+    const sCls = status === 'ongoing' ? 'ongoing' : status === 'completed' ? 'completed' : '';
+
+    view.innerHTML = `
+      <div class="detail-hero">
+        <div class="detail-bg" style="background-image:url('${cover}')"></div>
+        <div class="detail-content">
+          <button class="btn-back" onclick="goHome()">← Beranda</button>
+          <div class="detail-top">
+            <div class="detail-cover">
+              ${coverUrl ? `<img src="${coverUrl}" onerror="this.style.display='none'">` : ''}
+            </div>
+            <div class="detail-meta">
+              <div class="detail-title">${title}</div>
+              ${status ? `<span class="status-pill ${sCls}">${status}</span>` : ''}
+              ${author ? `<div class="detail-author">✍️ ${author}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+      ${genres.length ? `<div class="genres">${genres.map(g=>`<span class="genre-tag">${g}</span>`).join('')}</div>` : ''}
+      ${desc ? `<div class="desc-wrap">
+        <div class="desc-text" id="desc-text">${desc}</div>
+        <button class="btn-desc" onclick="toggleDesc()">Baca selengkapnya ▾</button>
+      </div>` : ''}
+      <div class="ch-header">
+        <div class="ch-title">Daftar Chapter</div>
+        <div class="ch-count">${chapters.length} bab</div>
+      </div>
+      <div class="ch-list" id="ch-list"></div>`;
+
+    const hist = getHistory();
+    const readSet = new Set(hist.filter(h => h.slug === comic.id || h.slug === comic.slug).map(h => h.chName));
+    const list = document.getElementById('ch-list');
+    chapters.forEach((ch, i) => {
+      const isRead = readSet.has(ch.name);
+      const el = document.createElement('div');
+      el.className = 'ch-item' + (isRead ? ' read' : '');
+      el.innerHTML = `
+        <div class="ch-left">
+          <div class="ch-dot ${isRead ? 'read' : ''}"></div>
+          <div>
+            <div class="ch-name">${ch.name}</div>
+            ${ch.date ? `<div class="ch-date">${relDate(ch.date)}</div>` : ''}
+          </div>
+        </div>
+        ${isRead ? `<span style="font-size:10px;color:var(--accent)">✓</span>` : ''}`;
+      el.onclick = () => loadReader(i);
+      list.appendChild(el);
+    });
+  } catch (e) {
+    view.innerHTML = `<div class="empty-wrap"><div class="empty-icon">⚠️</div><div>${e.message}</div><button class="btn-back" onclick="goHome()">← Beranda</button></div>`;
+  }
+}
+
+function toggleDesc() {
+  const t = document.getElementById('desc-text');
+  const b = document.querySelector('.btn-desc');
+  if (!t || !b) return;
+  t.classList.toggle('exp');
+  b.textContent = t.classList.contains('exp') ? 'Sembunyikan ▴' : 'Baca selengkapnya ▾';
+}
+
+// ─── READER ──────────────────────────────────────────────────────────────────
+async function loadReader(idx) {
+  currentChIdx = idx;
+  readerVisible = true;
+  showView('reader-view');
+  window.scrollTo(0, 0);
+  const view = document.getElementById('reader-view');
+  const ch = currentChapters[idx];
+  view.innerHTML = `<div class="loading-wrap" style="padding-top:80px"><div class="spinner"></div><div>Memuat ${ch.name}...</div></div>`;
+
+  buildReaderUI(ch.name);
+
+  try {
+    let images = [];
+
+    if (ch.source === 'shinigami') {
+      const r = await fetch(`${API.shinigami}?path=${encodeURIComponent(`/v1/chapter/detail/${ch.url}`)}`, { cache: 'no-store' });
+      const j = await r.json();
+      images = j.data?.chapter_image || j.data?.images || [];
+      images = images.map(i => i.image_url || i.url || i);
+
+    } else if (ch.source === 'komikcast') {
+      const r = await fetch(`${API.komikcast}?path=${encodeURIComponent(`/series/${ch.mangaSlug}/chapters/${ch.url}`)}`, { cache: 'no-store' });
+      const j = await r.json();
+      images = j?.data?.data?.images || j?.data?.images || [];
+
+    } else if (ch.source === 'kiryuu') {
+      const r = await fetch(ch.url, { headers: { Referer: 'https://v2.kiryuu.to/' } });
+      const html = await r.text();
+      const matches = [...html.matchAll(/src="(https?:\/\/[^"]+\.(jpg|png|webp)[^"]*)"/g)];
+      const cdnImgs = matches.map(m => m[1]).filter(u => u.includes('yuucdn.com') || u.includes('wp-content/uploads/imgsc'));
+      images = [...new Set(cdnImgs)];
+    }
+
+    if (!images.length) {
+      view.innerHTML = `<div class="loading-wrap"><div class="empty-icon">📭</div><div>Tidak ada gambar</div></div>`;
+      return;
+    }
+
+    saveHistory(currentManga.id || currentManga.slug, currentManga.title, currentManga.cover, ch.name);
+
+    const pages = document.createElement('div');
+    pages.className = 'reader-pages';
+    pages.style.paddingTop = '52px';
+    pages.style.paddingBottom = '52px';
+    images.forEach((url, i) => {
+      const img = document.createElement('img');
+      img.src = `https://images.weserv.nl/?w=720&q=80&url=${encodeURIComponent(url)}`;
+      img.loading = i < 3 ? 'eager' : 'lazy';
+      img.alt = `Hal ${i+1}`;
+      pages.appendChild(img);
+    });
+    view.innerHTML = '';
+    view.appendChild(pages);
+    view.onclick = toggleReaderUI;
+
+  } catch (e) {
+    view.innerHTML = `<div class="loading-wrap"><div class="empty-icon">⚠️</div><div>${e.message}</div></div>`;
+  }
+}
+
+function buildReaderUI(chName) {
+  let top = document.getElementById('rdr-top');
+  if (!top) { top = document.createElement('div'); top.id = 'rdr-top'; document.body.appendChild(top); }
+  top.className = 'reader-top';
+  top.innerHTML = `
+    <button class="rui-back" onclick="loadDetail(currentManga)">← Detail</button>
+    <div class="rui-title">${currentManga.title} · ${chName}</div>`;
+
+  let bot = document.getElementById('rdr-bot');
+  if (!bot) { bot = document.createElement('div'); bot.id = 'rdr-bot'; document.body.appendChild(bot); }
+  bot.className = 'reader-bot';
+  bot.innerHTML = `
+    <button class="rui-btn" id="rdr-prev" onclick="navCh(1)">‹ Prev</button>
+    <div class="rui-ch">${chName}</div>
+    <button class="rui-btn" id="rdr-next" onclick="navCh(-1)">Next ›</button>`;
+
+  updateNavBtns();
+}
+
+function updateNavBtns() {
+  const prev = document.getElementById('rdr-prev');
+  const next = document.getElementById('rdr-next');
+  if (prev) prev.disabled = currentChIdx >= currentChapters.length - 1;
+  if (next) next.disabled = currentChIdx <= 0;
+}
+
+function navCh(dir) {
+  const ni = currentChIdx + dir;
+  if (ni < 0 || ni >= currentChapters.length) return;
+  loadReader(ni);
+}
+
+function toggleReaderUI() {
+  readerVisible = !readerVisible;
+  ['rdr-top','rdr-bot'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hide', !readerVisible);
+  });
+}
+
+function removeReaderUI() {
+  ['rdr-top','rdr-bot'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('komik_hist') || '[]'); } catch { return []; }
+}
+function saveHistory(slug, title, cover, chName) {
+  let h = getHistory().filter(x => x.slug !== slug);
+  h.unshift({ slug, title, cover, chName, date: Date.now() });
+  if (h.length > 50) h = h.slice(0, 50);
+  localStorage.setItem('komik_hist', JSON.stringify(h));
+}
+function showHistory() {
+  showView('history-view');
+  const view = document.getElementById('history-view');
+  const h = getHistory();
+  if (!h.length) {
+    view.innerHTML = `<div class="home-header"><div class="home-title">History</div></div><div class="empty-wrap"><div class="empty-icon">📭</div><div>Belum ada history</div></div>`;
+    return;
+  }
+  view.innerHTML = `
+    <div class="home-header"><div class="home-title">History</div></div>
+    <button class="btn-clear" onclick="clearHistory()">🗑 Hapus Semua</button>
+    <div class="hist-list" id="hist-list"></div>`;
+  const list = document.getElementById('hist-list');
+  h.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'hist-item';
+    const cover = item.cover ? WSRV + encodeURIComponent(item.cover) : '';
+    el.innerHTML = `
+      ${cover ? `<img class="hist-thumb" src="${cover}" onerror="this.style.display='none'">` : `<div class="hist-thumb" style="display:flex;align-items:center;justify-content:center">📖</div>`}
+      <div class="hist-info">
+        <div class="hist-title">${item.title}</div>
+        <div class="hist-ch">${item.chName}</div>
+        <div class="hist-date">${relDate(item.date)}</div>
+      </div>`;
+    el.onclick = () => {
+      const comic = allComics.find(c => (c.id || c.slug) === item.slug);
+      if (comic) loadDetail(comic);
+    };
+    list.appendChild(el);
+  });
+}
+function clearHistory() {
+  if (confirm('Hapus semua history?')) { localStorage.removeItem('komik_hist'); showHistory(); }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadHome(1);
+</script>
+</body>
+</html>
